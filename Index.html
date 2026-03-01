@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AcquireFlow AI — Architecture Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --accent: #00e5a0;
+    --accent2: #7c5cfc;
+    --accent3: #ff5f7e;
+    --accent4: #ffc14d;
+    --text: #e8e8f0;
+    --muted: #6a6a8a;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 70px;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .title {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .title span { color: var(--accent); }
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* ── Section Labels ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Pipeline Flow ── */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-bottom: 64px;
+    position: relative;
+  }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    position: relative;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: default;
+  }
+  .agent-card:hover {
+    transform: translateY(-4px);
+    z-index: 2;
+  }
+  .agent-card.a { border-top: 3px solid var(--accent); }
+  .agent-card.b { border-top: 3px solid var(--accent2); }
+  .agent-card.c { border-top: 3px solid var(--accent3); }
+  .agent-card.d { border-top: 3px solid var(--accent4); }
+  .agent-card.a:hover { border-color: var(--accent); }
+  .agent-card.b:hover { border-color: var(--accent2); }
+  .agent-card.c:hover { border-color: var(--accent3); }
+  .agent-card.d:hover { border-color: var(--accent4); }
+
+  .agent-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .agent-card.a .agent-id { color: var(--accent); }
+  .agent-card.b .agent-id { color: var(--accent2); }
+  .agent-card.c .agent-id { color: var(--accent3); }
+  .agent-card.d .agent-id { color: var(--accent4); }
+
+  .agent-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .agent-role {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .agent-desc {
+    font-size: 12px;
+    color: #9090b0;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tool-pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    letter-spacing: 1px;
+    width: fit-content;
+  }
+
+  .arrow-between {
+    position: absolute;
+    top: 50%;
+    right: -14px;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    z-index: 3;
+    border-radius: 50%;
+  }
+
+  /* ── RAG Section ── */
+  .rag-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent4);
+    padding: 32px;
+    margin-bottom: 64px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+  }
+  .rag-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .rag-title span { color: var(--accent4); }
+  .rag-subtitle {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+  .rag-desc {
+    font-size: 12px;
+    color: #9090b0;
+    line-height: 1.7;
+  }
+
+  .rag-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rag-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    color: #9090b0;
+    line-height: 1.5;
+  }
+  .rag-step-num {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent4);
+    background: rgba(255,193,77,0.1);
+    border: 1px solid rgba(255,193,77,0.2);
+    padding: 2px 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .rag-tech {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tech-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .tech-label { color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 1px; }
+  .tech-value { color: var(--accent4); font-family: var(--mono); font-size: 10px; }
+
+  /* ── API Matrix ── */
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-bottom: 64px;
+  }
+  .api-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+  .api-category {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .api-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .api-item:last-child { border-bottom: none; }
+  .api-name { color: var(--text); font-weight: 600; }
+  .api-cost { font-family: var(--mono); font-size: 9px; color: var(--accent); }
+  .api-purpose { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Scaling Section ── */
+  .scale-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-bottom: 64px;
+  }
+  .scale-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+  }
+  .scale-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .scale-card-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .scale-card-title .dot.purple { background: var(--accent2); }
+  .scale-card-title .dot.red { background: var(--accent3); }
+  .scale-card-title .dot.yellow { background: var(--accent4); }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-label { color: var(--muted); }
+  .metric-value { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 700; }
+  .metric-value.purple { color: var(--accent2); }
+  .metric-value.red { color: var(--accent3); }
+
+  .code-block {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #9090b0;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .code-block .comment { color: #4a4a6a; }
+  .code-block .keyword { color: var(--accent2); }
+  .code-block .string { color: var(--accent); }
+  .code-block .number { color: var(--accent4); }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* Animations */
+  @keyframes pulse-border {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .agent-card.d { animation: pulse-border 3s ease-in-out infinite; }
+  .agent-card.d:hover { animation: none; }
+
+  @media (max-width: 900px) {
+    .pipeline { grid-template-columns: 1fr 1fr; }
+    .rag-section { grid-template-columns: 1fr; }
+    .api-grid { grid-template-columns: 1fr 1fr; }
+    .scale-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .pipeline { grid-template-columns: 1fr; }
+    .api-grid { grid-template-columns: 1fr; }
+    .container { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">Architecture Blueprint v1.0</div>
+    <h1 class="title">AcquireFlow <span>AI</span></h1>
+    <p class="subtitle">SDR-AS-A-SERVICE ENGINE // CREWAI + RAG + LOCAL LLM (OLLAMA)</p>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="section-label">01 // AGENT PIPELINE — SEQUENTIAL ORCHESTRATION</div>
+  <div class="pipeline">
+
+    <div class="agent-card a" style="position:relative;">
+      <div class="agent-id">AGENT A</div>
+      <div class="agent-name">The Researcher</div>
+      <div class="agent-role">LEAD INTELLIGENCE SPECIALIST</div>
+      <div class="agent-desc">Scrapes LinkedIn company pages and the open web to build a structured Lead Dossier. Detects funding events, tech stack, hiring signals, and key decision makers.</div>
+      <div class="tools-list">
+        <div class="tool-pill">▸ LinkedIn Scraper (ProxyCurl)</div>
+        <div class="tool-pill">▸ Web Research (DuckDuckGo)</div>
+        <div class="tool-pill">▸ Apollo Lead Enrichment</div>
+      </div>
+      <div class="arrow-between">→</div>
+    </div>
+
+    <div class="agent-card b" style="position:relative;">
+      <div class="agent-id">AGENT B</div>
+      <div class="agent-name">The Strategist</div>
+      <div class="agent-role">GTM PAIN-POINT ANALYST</div>
+      <div class="agent-desc">Ingests the Dossier and identifies the top 3 pain points grounded in real signals. Maps each pain to a specific product value prop. Outputs a "Strike Brief" with a hook sentence.</div>
+      <div class="tools-list">
+        <div class="tool-pill">▸ Pure Reasoning (No Tools)</div>
+        <div class="tool-pill">▸ Context: Dossier from Agent A</div>
+        <div class="tool-pill">▸ Output: Strike Brief (MD)</div>
+      </div>
+      <div class="arrow-between">→</div>
+    </div>
+
+    <div class="agent-card c" style="position:relative;">
+      <div class="agent-id">AGENT C</div>
+      <div class="agent-name">The Copywriter</div>
+      <div class="agent-role">HYPER-PERSONALIZED OUTREACH</div>
+      <div class="agent-desc">Writes a 3-email cold outreach sequence using the Strike Brief. Email 1: Hook. Email 2: Value + Case Study. Email 3: Pattern-interrupt breakup. Zero templates. Every line earned.</div>
+      <div class="tools-list">
+        <div class="tool-pill">▸ Context: Dossier + Strike Brief</div>
+        <div class="tool-pill">▸ Forbidden phrases list enforced</div>
+        <div class="tool-pill">▸ Output: 3 Emails (sub/body)</div>
+      </div>
+      <div class="arrow-between">→</div>
+    </div>
+
+    <div class="agent-card d">
+      <div class="agent-id">AGENT D</div>
+      <div class="agent-name">The Closer</div>
+      <div class="agent-role">RAG-POWERED OBJECTION HANDLER</div>
+      <div class="agent-desc">When a prospect replies with an objection, retrieves the top winning responses from the vector playbook, crafts a personalized reframe, sends reply, and logs to CRM.</div>
+      <div class="tools-list">
+        <div class="tool-pill">▸ RAG Playbook (ChromaDB)</div>
+        <div class="tool-pill">▸ Email Sender (SendGrid)</div>
+        <div class="tool-pill">▸ CRM Updater (HubSpot)</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RAG Engine -->
+  <div class="section-label">02 // RAG ENGINE — OBJECTION INTELLIGENCE</div>
+  <div class="rag-section">
+    <div>
+      <div class="rag-title"><span>RAG</span> Playbook Engine</div>
+      <div class="rag-subtitle">RETRIEVAL-AUGMENTED GENERATION</div>
+      <div class="rag-desc">
+        A local ChromaDB vector store ingests your winning sales responses, email threads, deal post-mortems, and objection scripts. When a prospect objects, Agent D retrieves the 4 most relevant playbook entries using MMR search and augments the LLM prompt with real-world context — no hallucinated responses.
+      </div>
+    </div>
+    <div>
+      <div class="rag-subtitle">RETRIEVAL PIPELINE</div>
+      <div class="rag-flow">
+        <div class="rag-step"><span class="rag-step-num">01</span> Prospect reply ingested as raw text</div>
+        <div class="rag-step"><span class="rag-step-num">02</span> Embed objection via nomic-embed-text (Ollama)</div>
+        <div class="rag-step"><span class="rag-step-num">03</span> MMR search in ChromaDB (k=4, fetch_k=20)</div>
+        <div class="rag-step"><span class="rag-step-num">04</span> Top 4 playbook hits injected into Closer's prompt</div>
+        <div class="rag-step"><span class="rag-step-num">05</span> Llama 3/Mistral generates personalized reply</div>
+        <div class="rag-step"><span class="rag-step-num">06</span> Reply sent + outcome logged to CRM</div>
+      </div>
+    </div>
+    <div>
+      <div class="rag-subtitle">TECH STACK</div>
+      <div class="rag-tech">
+        <div class="tech-row"><span class="tech-label">Vector DB</span><span class="tech-value">ChromaDB (local)</span></div>
+        <div class="tech-row"><span class="tech-label">Embeddings</span><span class="tech-value">nomic-embed-text</span></div>
+        <div class="tech-row"><span class="tech-label">LLM (Privacy)</span><span class="tech-value">Llama 3 / Mistral</span></div>
+        <div class="tech-row"><span class="tech-label">LLM Runtime</span><span class="tech-value">Ollama (local)</span></div>
+        <div class="tech-row"><span class="tech-label">Search Type</span><span class="tech-value">MMR Retrieval</span></div>
+        <div class="tech-row"><span class="tech-label">Chunk Size</span><span class="tech-value">500 tokens</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Connections -->
+  <div class="section-label">03 // API CONNECTIONS — EXTERNAL INTEGRATIONS</div>
+  <div class="api-grid">
+    <div class="api-card">
+      <div class="api-category">Lead Sourcing</div>
+      <div class="api-item"><div><div class="api-name">Apollo.io</div><div class="api-purpose">ICP lead lists, contact data</div></div><div class="api-cost">FREE / $49+/mo</div></div>
+      <div class="api-item"><div><div class="api-name">ProxyCurl</div><div class="api-purpose">LinkedIn profile scraping</div></div><div class="api-cost">$0.01/req</div></div>
+      <div class="api-item"><div><div class="api-name">Hunter.io</div><div class="api-purpose">Email finder & verifier</div></div><div class="api-cost">FREE / $34+/mo</div></div>
+    </div>
+    <div class="api-card">
+      <div class="api-category">Outreach & Email</div>
+      <div class="api-item"><div><div class="api-name">SendGrid</div><div class="api-purpose">Transactional email sending</div></div><div class="api-cost">FREE / $20+/mo</div></div>
+      <div class="api-item"><div><div class="api-name">Smartlead</div><div class="api-purpose">Email warmup & deliverability</div></div><div class="api-cost">$39+/mo</div></div>
+      <div class="api-item"><div><div class="api-name">Instantly.ai</div><div class="api-purpose">Alt: cold email sequences</div></div><div class="api-cost">$37+/mo</div></div>
+    </div>
+    <div class="api-card">
+      <div class="api-category">CRM & Intelligence</div>
+      <div class="api-item"><div><div class="api-name">HubSpot</div><div class="api-purpose">Contact & pipeline management</div></div><div class="api-cost">FREE CRM</div></div>
+      <div class="api-item"><div><div class="api-name">Salesforce</div><div class="api-purpose">Enterprise CRM (optional)</div></div><div class="api-cost">$25+/user/mo</div></div>
+      <div class="api-item"><div><div class="api-name">Clearbit/Enrichment</div><div class="api-purpose">Company data enrichment</div></div><div class="api-cost">$99+/mo</div></div>
+    </div>
+  </div>
+
+  <!-- Scaling -->
+  <div class="section-label">04 // SCALING TO 50+ US STARTUPS</div>
+  <div class="scale-grid">
+    <div class="scale-card">
+      <div class="scale-card-title"><div class="dot"></div>Performance Targets</div>
+      <div class="metric-row"><span class="metric-label">Leads processed / run</span><span class="metric-value">50</span></div>
+      <div class="metric-row"><span class="metric-label">Concurrent crew instances</span><span class="metric-value">5 (asyncio)</span></div>
+      <div class="metric-row"><span class="metric-label">Avg. time per company</span><span class="metric-value">~4 min</span></div>
+      <div class="metric-row"><span class="metric-label">Est. 50-lead batch time</span><span class="metric-value">~40 min</span></div>
+      <div class="metric-row"><span class="metric-label">Emails generated / run</span><span class="metric-value">150 (3×50)</span></div>
+      <div class="metric-row"><span class="metric-label">Objection responses / run</span><span class="metric-value">200 (4×50)</span></div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-card-title"><div class="dot purple"></div>ICP Qualification Criteria</div>
+      <div class="metric-row"><span class="metric-label">Geography</span><span class="metric-value purple">US Only</span></div>
+      <div class="metric-row"><span class="metric-label">Funding Stage</span><span class="metric-value purple">Seed – Series B</span></div>
+      <div class="metric-row"><span class="metric-label">Headcount</span><span class="metric-value purple">10 – 500</span></div>
+      <div class="metric-row"><span class="metric-label">Target Titles</span><span class="metric-value purple">CTO / VP Eng / CPO</span></div>
+      <div class="metric-row"><span class="metric-label">Industry</span><span class="metric-value purple">SaaS / Dev Tools</span></div>
+      <div class="metric-row"><span class="metric-label">Min. ICP Score</span><span class="metric-value purple">≥ 0.75</span></div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-card-title"><div class="dot red"></div>Privacy Mode (Ollama)</div>
+      <div class="code-block"><span class="comment"># Zero data leaves your machine</span>
+<span class="keyword">AF_LLM_PROVIDER</span>=<span class="string">ollama</span>
+<span class="keyword">AF_OLLAMA_MODEL</span>=<span class="string">llama3</span>  <span class="comment"># or mistral</span>
+<span class="keyword">AF_OLLAMA_URL</span>=<span class="string">http://localhost:11434</span>
+<span class="keyword">AF_EMBED_MODEL</span>=<span class="string">nomic-embed-text</span>
+
+<span class="comment"># Pull models once:</span>
+$ ollama pull llama3
+$ ollama pull nomic-embed-text
+
+<span class="comment"># ChromaDB is also local</span>
+<span class="keyword">AF_CHROMA_PATH</span>=<span class="string">./chroma_db</span></div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-card-title"><div class="dot yellow"></div>Files Structure</div>
+      <div class="code-block">acquireflow/
+├── <span class="string">acquireflow_main.py</span>   <span class="comment"># Entry point</span>
+├── <span class="string">scale_runner.py</span>       <span class="comment"># Async batch (50+)</span>
+├── <span class="string">agents.py</span>             <span class="comment"># 4 CrewAI agents</span>
+├── <span class="string">tasks.py</span>              <span class="comment"># 4 task definitions</span>
+├── <span class="string">rag_engine.py</span>         <span class="comment"># ChromaDB + RAG</span>
+├── <span class="string">config.py</span>             <span class="comment"># All settings / keys</span>
+├── tools/
+│   └── <span class="string">__init__.py</span>       <span class="comment"># 5 custom tools</span>
+├── <span class="string">playbooks/</span>            <span class="comment"># JSON objection data</span>
+├── <span class="string">chroma_db/</span>            <span class="comment"># Local vector store</span>
+├── <span class="string">requirements.txt</span>
+└── <span class="string">.env</span>                  <span class="comment"># API keys (never commit)</span></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-text">ACQUIREFLOW AI // CREWAI v0.30 // CHROMADB // OLLAMA (LLAMA 3 / MISTRAL) // BUILT FOR SCALE</div>
+  </div>
+
+</div>
+</body>
+</html>
