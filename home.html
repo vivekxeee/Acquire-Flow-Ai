@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Alpha — Executive Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0a0a;
+    --surface:   #111114;
+    --surface2:  #16161b;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(41,182,246,0.25);
+    --blue:      #29b6f6;
+    --blue-dim:  #0b3d54;
+    --blue-glow: rgba(41,182,246,0.12);
+    --text:      #e8e8ec;
+    --muted:     #6b6b78;
+    --danger:    #ef5350;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'Sora', sans-serif;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.65;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid texture overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(41,182,246,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(41,182,246,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glow blob ── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(41,182,246,0.07) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(18px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  @keyframes scanline {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+
+  .fade-1 { animation: fadeUp 0.6s ease both 0.05s; }
+  .fade-2 { animation: fadeUp 0.6s ease both 0.15s; }
+  .fade-3 { animation: fadeUp 0.6s ease both 0.25s; }
+  .fade-4 { animation: fadeUp 0.6s ease both 0.35s; }
+  .fade-5 { animation: fadeUp 0.6s ease both 0.45s; }
+  .fade-6 { animation: fadeUp 0.6s ease both 0.55s; }
+  .fade-7 { animation: fadeUp 0.6s ease both 0.65s; }
+  .fade-8 { animation: fadeUp 0.6s ease both 0.75s; }
+
+  /* ── Top status bar ── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .status-bar .brand {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--blue);
+    text-transform: uppercase;
+  }
+
+  .status-bar .badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border2);
+    color: var(--blue);
+    background: var(--blue-glow);
+  }
+
+  .badge.live::before {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--blue);
+    margin-right: 6px;
+    vertical-align: middle;
+    animation: pulse 1.8s ease infinite;
+  }
+
+  /* ── Hero / Identity ── */
+  .hero {
+    margin-bottom: 56px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    max-width: 80px;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  .hero-title .blue { color: var(--blue); }
+
+  .hero-title .cursor {
+    display: inline-block;
+    width: 3px;
+    height: 0.85em;
+    background: var(--blue);
+    vertical-align: middle;
+    margin-left: 4px;
+    animation: blink 1s step-end infinite;
+  }
+
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+    border: 1px solid var(--border);
+    margin-top: 28px;
+  }
+
+  .hero-meta-item {
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .hero-meta-item:last-child { border-right: none; }
+
+  .hero-meta-item .label {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .hero-meta-item .value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .hero-meta-item .value span {
+    color: var(--blue);
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 44px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--blue);
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border2), var(--border));
+  }
+
+  .section-tag {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── Problem metrics ── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 20px;
+  }
+
+  .problem-cell {
+    background: var(--surface);
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .problem-cell::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--danger);
+    opacity: 0.7;
+  }
+
+  .problem-cell .num {
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 600;
+    color: var(--danger);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .problem-cell .desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .problem-cell .desc strong {
+    display: block;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    font-size: 0.8rem;
+  }
+
+  .problem-statement {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--danger);
+    padding: 16px 20px;
+    font-size: 0.875rem;
+    color: #aaaaB2;
+    line-height: 1.7;
+  }
+
+  .problem-statement strong { color: var(--text); font-weight: 600; }
+
+  /* ── Solution ── */
+  .phase-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .phase-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, var(--blue) 0%, transparent 60%);
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .phase-chip {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--blue);
+    padding: 3px 10px;
+    font-weight: 600;
+  }
+
+  .phase-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .phase-status {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+  }
+
+  .phase-body {
+    padding: 18px 22px;
+  }
+
+  .spec-row {
+    display: flex;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+    font-size: 0.84rem;
+  }
+
+  .spec-row:last-child { border-bottom: none; }
+
+  .spec-key {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--blue);
+    white-space: nowrap;
+    min-width: 130px;
+    padding-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .spec-val {
+    color: #b0b0bc;
+    line-height: 1.5;
+  }
+
+  .spec-val strong { color: var(--text); font-weight: 600; }
+
+  /* Feature pills */
+  .feature-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 22px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .fchip {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border: 1px solid var(--border2);
+    color: var(--blue);
+    background: var(--blue-glow);
+  }
+
+  /* ── Investment ── */
+  .invest-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    margin-bottom: 16px;
+  }
+
+  .invest-cell {
+    background: var(--surface);
+    padding: 24px 22px;
+  }
+
+  .invest-cell.highlight {
+    background: var(--blue-glow);
+    border: 1px solid var(--border2);
+  }
+
+  .invest-cell .i-label {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .invest-cell .i-value {
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 600;
+    color: var(--blue);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .invest-cell .i-value.strike {
+    font-size: 1rem;
+    text-decoration: line-through;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .invest-cell .i-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .invest-cell .i-sub strong { color: var(--text); font-weight: 500; }
+
+  .invest-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--blue);
+    padding: 14px 20px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .invest-note strong { color: var(--text); }
+
+  /* ── Timeline ── */
+  .timeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: var(--border);
+    border: 1px solid var(--border2);
+    overflow: hidden;
+  }
+
+  .tl-item {
+    flex: 1;
+    background: var(--surface);
+    padding: 20px 18px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tl-item:last-child { border-right: none; }
+
+  .tl-item.active {
+    background: var(--blue-glow);
+  }
+
+  .tl-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--blue);
+  }
+
+  .tl-day {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .tl-item.active .tl-day { color: var(--blue); }
+
+  .tl-title {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .tl-desc {
+    font-size: 0.74rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── CTA ── */
+  .cta {
+    margin-top: 52px;
+    border: 1px solid var(--border2);
+    background: var(--blue-glow);
+    padding: 32px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(41,182,246,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Scanline effect on CTA */
+  .cta::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(41,182,246,0.08), transparent);
+    animation: scanline 3.5s ease infinite;
+  }
+
+  .cta-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-text .cta-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+
+  .cta-text .cta-title {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .cta-text .cta-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .cta-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 220px;
+  }
+
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    line-height: 1;
+  }
+
+  .cta-btn-primary {
+    color: var(--bg);
+    background: var(--blue);
+    border-color: var(--blue);
+  }
+
+  .cta-btn-primary:hover {
+    background: transparent;
+    color: var(--blue);
+    box-shadow: 0 0 20px rgba(41,182,246,0.25);
+  }
+
+  .cta-btn-secondary {
+    color: var(--blue);
+    background: var(--blue-glow);
+    border-color: var(--border2);
+  }
+
+  .cta-btn-secondary:hover {
+    background: rgba(41,182,246,0.18);
+    box-shadow: 0 0 16px rgba(41,182,246,0.15);
+  }
+
+  .cta-btn-icon {
+    flex-shrink: 0;
+    opacity: 0.7;
+    font-size: 0.75rem;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-left {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .footer-right {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .footer-right .af {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .wrap { padding: 28px 18px 60px; }
+    .problem-grid { grid-template-columns: 1fr; }
+    .invest-grid { grid-template-columns: 1fr; }
+    .timeline { flex-direction: column; }
+    .tl-item { border-right: none; border-bottom: 1px solid var(--border); }
+    .tl-item:last-child { border-bottom: none; }
+    .hero-meta { grid-template-columns: 1fr 1fr; }
+    .hero-meta-item { border-bottom: 1px solid var(--border); }
+    .hero-meta-item:last-child { border-right: none; }
+    .spec-key { min-width: 110px; font-size: 0.62rem; }
+    .phase-header { gap: 8px; }
+    .cta { flex-direction: column; gap: 20px; }
+    .cta-actions { width: 100%; min-width: unset; }
+    .cta-btn { width: 100%; }
+    .footer { flex-direction: column; }
+    .footer-right { text-align: left; }
+  }
+
+  @media (max-width: 400px) {
+    .hero-meta { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Status Bar -->
+  <div class="status-bar fade-1">
+    <div class="brand">Acquire Flow · AI Infrastructure Division</div>
+    <div class="badges">
+      <span class="badge live">Live Proposal</span>
+      <span class="badge">Confidential</span>
+      <span class="badge">Rev 1.0 · Mar 2026</span>
+    </div>
+  </div>
+
+  <!-- Hero / Identity -->
+  <div class="hero fade-2">
+    <div class="hero-eyebrow">Executive Blueprint</div>
+    <h1 class="hero-title">
+      Project Alpha:<br>
+      <span class="blue">Sovereign Sales</span> Infrastructure<span class="cursor"></span>
+    </h1>
+
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <div class="label">Prepared For</div>
+        <div class="value">Pramin &nbsp;/&nbsp; <span>BotGauge</span></div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">Lead Architect</div>
+        <div class="value">Vivek &nbsp;/&nbsp; <span>Acquire Flow</span></div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">Engagement</div>
+        <div class="value"><span>Design Partner</span> · Pilot</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="label">Production ETA</div>
+        <div class="value"><span>14 Days</span> from Sign-off</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 01 — Problem -->
+  <div class="section fade-3">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">The Latency Tax</span>
+      <span class="section-line"></span>
+      <span class="section-tag">Diagnosis</span>
+    </div>
+
+    <div class="problem-grid">
+      <div class="problem-cell">
+        <div class="num">$15K</div>
+        <div class="desc"><strong>Monthly SDR Burn</strong>Fully-loaded cost per US-timezone rep, hired from India. No pipeline guarantee.</div>
+      </div>
+      <div class="problem-cell">
+        <div class="num">12h+</div>
+        <div class="desc"><strong>Timezone Delay</strong>Peak US buying intent — 8–11AM EST — missed entirely. Response latency kills conversion.</div>
+      </div>
+      <div class="problem-cell">
+        <div class="num">~80%</div>
+        <div class="desc"><strong>Conversion Loss</strong>Probability drop when response exceeds 5 minutes. Every delayed reply is lost pipeline.</div>
+      </div>
+    </div>
+
+    <div class="problem-statement">
+      For a <strong>$2M funded startup</strong>, deploying $12,000–$15,000/month per SDR across a 12-hour timezone chasm — with inconsistent messaging, human attrition risk, and zero guarantee of output — is not a GTM strategy. It is a <strong>compounding capital leak</strong>. The infrastructure exists to solve this with software.
+    </div>
+  </div>
+
+  <!-- SECTION 02 — Solution -->
+  <div class="section fade-4">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">The Sovereign Swarm</span>
+      <span class="section-line"></span>
+      <span class="section-tag">Architecture</span>
+    </div>
+
+    <!-- Phase 1 -->
+    <div class="phase-block">
+      <div class="phase-header">
+        <span class="phase-chip">Phase 1</span>
+        <span class="phase-name">Pilot Orchestration Layer</span>
+        <span class="phase-status">Deploy: Day 0 → 45</span>
+      </div>
+      <div class="phase-body">
+        <div class="spec-row">
+          <span class="spec-key">MODEL</span>
+          <span class="spec-val"><strong>Claude 3.5 Sonnet</strong> — Enterprise API with <strong>Zero Data Retention</strong> policy enforced at the API level. No training on client data.</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">ARCHITECTURE</span>
+          <span class="spec-val">Multi-agent swarm: Prospecting agent → Personalization agent → Sequencing agent → Response handler. Each agent is specialized and stateless.</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-key">RAG LAYER</span>
+          <span class="spec-val"><strong>Strict Retrieval-Augmented Generation.</strong> All outputs are grounded in verified client corpus only. 
